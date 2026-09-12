@@ -1,0 +1,73 @@
+name: HirePilot AI CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-build-test:
+    name: Backend Build & Test (Java 21 / Spring Boot 3)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build & Test Backend with Maven
+        working-directory: ./backend
+        run: mvn clean test
+
+  frontend-build-test:
+    name: Frontend Build & Typecheck (React 19 / Vite / Tailwind)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Check
+        run: npm run lint
+
+      - name: Build Production Bundle
+        run: npm run build
+
+  docker-verification:
+    name: Docker Image Verification
+    runs-on: ubuntu-latest
+    needs: [backend-build-test, frontend-build-test]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          tags: hirepilot-backend:test
+
+      - name: Build Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: hirepilot-frontend:test

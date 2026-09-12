@@ -1,0 +1,57 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: hirepilot-core
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hirepilot_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      pool-name: HirePilotHikariCP
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 20
+
+# JWT Authentication Config
+hirepilot:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      expiration-ms: 604800000 # 7 days
+  ai:
+    provider: ${AI_PROVIDER:gemini}
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: gemini-3.8-flash
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      model: gpt-4o-mini
+    timeout-seconds: 30
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+logging:
+  level:
+    root: INFO
+    com.hirepilot: DEBUG
+    org.springframework.security: INFO

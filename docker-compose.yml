@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hirepilot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hirepilot_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hirepilot-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hirepilot-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hirepilot_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    ports:
+      - "8080:8080"
+    networks:
+      - hirepilot-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hirepilot-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    networks:
+      - hirepilot-net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  hirepilot-net:
+    driver: bridge

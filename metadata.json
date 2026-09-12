@@ -1,0 +1,6 @@
+{
+  "name": "HirePilot AI",
+  "description": "AI-Powered Job Search & Interview Copilot for software engineers featuring ATS resume tailoring, job match analysis, project recommendations, personalized learning plans, adaptive mock technical interviews, and Kanban application tracking.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
